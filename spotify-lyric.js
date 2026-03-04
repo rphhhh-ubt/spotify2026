@@ -73,80 +73,106 @@ if (resStatus !== 200) {
         const { appid, securityKey } = options;
         //console.log(`appid:${appid},securityKey:${securityKey}`);
 
-        const query = colorLyricsResponseObj.lyrics.lines
-            .map(x => x.words)
-            .filter(words => words && words !== '♪')
-            .filter((v, i, a) => a.indexOf(v) === i)
-            .join('\n');
-        // Используем POST запрос для обхода лимита длины URL (414 URI Too Long)
-        const requestUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ru&dt=t`;
+        const colorLyricsResponseObj = ColorLyricsResponse.fromBinary(binaryBody, { readUnknownField: true });
 
-        commonApi.post({
-            url: requestUrl,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
-            },
-            body: `q=${encodeURIComponent(query)}`
-        }, (error, response, data) => {
-            if (error) {
-                commonApi.msg(notifyName, 'Google Translate', `error错误${error}`);
-                $done({});
-            } else if (response.status !== 200) {
-                commonApi.msg(notifyName, 'Google Translate', `响应不为200:${response.status}`);
-                $done({});
-            } else {
-                try {
-                    const gtResult = JSON.parse(data);
+        if (!colorLyricsResponseObj || !colorLyricsResponseObj.lyrics) {
+            commonApi.msg(notifyName, 'Lyrics Debug', 'No lyrics object found');
+            $done({});
+            return;
+        }
 
-                    if (gtResult && gtResult[0]) {
-                        console.log('Перевод через Google успешен');
+        if (!colorLyricsResponseObj.lyrics.lines || colorLyricsResponseObj.lyrics.lines.length === 0) {
+            commonApi.msg(notifyName, 'Lyrics Debug', 'No lines found in lyrics');
+            $done({});
+            return;
+        }
 
-                        // Google возвращает массив кусков перевода: [ ["Перевод 1", "Оригинал 1", ...], ["Перевод 2", "Оригинал 2", ...] ]
-                        // Соберем все переведенные части в единый массив
-                        let translatedLinesArray = gtResult[0].map(item => item[0]);
+        const originLanguage = colorLyricsResponseObj.lyrics.language;
+        if (!originLanguage) {
+            commonApi.msg(notifyName, 'Lyrics Debug', 'No origin language, skipping');
+            $done({});
+        } else if ('z1' !== originLanguage) {
+            try {
+                const query = colorLyricsResponseObj.lyrics.lines
+                    .map(x => x.words)
+                    .filter(words => words && words !== '♪')
+                    .filter((v, i, a) => a.indexOf(v) === i)
+                    .join('\n');
 
-                        // Так как мы склеивали строки через \n, разобьем их обратно (Google иногда объединяет строки)
-                        let fullTranslatedText = translatedLinesArray.join('');
-                        let transMapValues = fullTranslatedText.split('\n').map(l => l.trim());
-
-                        // Оригинальные строки для маппинга
-                        let originalLines = query.split('\n');
-
-                        const transArr = [];
-                        for (let i = 0; i < originalLines.length; i++) {
-                            if (originalLines[i] && transMapValues[i] && originalLines[i] !== transMapValues[i]) {
-                                transArr.push([originalLines[i], transMapValues[i]]);
-                            }
-                        }
-
-                        const transMap = new Map(transArr);
-
-                        colorLyricsResponseObj.lyrics.alternatives = [{
-                            "language": "z1",
-                            "lines": colorLyricsResponseObj.lyrics.lines.map(line => line.words)
-                                .map(word => transMap.get(word) || word || '')
-                        }];
-
-                        const body = ColorLyricsResponse.toBinary(colorLyricsResponseObj);
-                        if (isQX) {
-                            $done({ bodyBytes: body.buffer.slice(body.byteOffset, body.byteLength + body.byteOffset) });
-                        } else {
-                            $done({ body });
-                        }
-                    } else {
-                        commonApi.msg(notifyName, 'Google Translate', `Ошибка разбора ответа: ${data}`);
-                        $done({});
-                    }
-                } catch (e) {
-                    commonApi.msg(notifyName, 'Google Translate', `Ошибка парсинга JSON: ${e.message}`);
+                if (!query) {
+                    commonApi.msg(notifyName, 'Lyrics Debug', 'Query is empty after filtering');
                     $done({});
+                    return;
                 }
+
+                const requestUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ru&dt=t`;
+
+                commonApi.post({
+                    url: requestUrl,
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+                    },
+                    body: `q=${encodeURIComponent(query)}`
+                }, (error, response, data) => {
+                    if (error) {
+                        commonApi.msg(notifyName, 'Google API', `Error: ${error}`);
+                        $done({});
+                    } else if (response.status !== 200) {
+                        commonApi.msg(notifyName, 'Google API', `Status: ${response.status}`);
+                        $done({});
+                    } else {
+                        try {
+                            const gtResult = JSON.parse(data);
+
+                            if (gtResult && gtResult[0]) {
+                                let translatedLinesArray = gtResult[0].map(item => item[0]);
+                                let fullTranslatedText = translatedLinesArray.join('');
+                                let transMapValues = fullTranslatedText.split('\n').map(l => l.trim());
+
+                                let originalLines = query.split('\n');
+                                const transArr = [];
+                                for (let i = 0; i < originalLines.length; i++) {
+                                    if (originalLines[i] && transMapValues[i] && originalLines[i] !== transMapValues[i]) {
+                                        transArr.push([originalLines[i], transMapValues[i]]);
+                                    }
+                                }
+
+                                const transMap = new Map(transArr);
+
+                                colorLyricsResponseObj.lyrics.alternatives = [{
+                                    "language": "z1",
+                                    "lines": colorLyricsResponseObj.lyrics.lines.map(line => line.words)
+                                        .map(word => transMap.get(word) || word || '')
+                                }];
+
+                                const body = ColorLyricsResponse.toBinary(colorLyricsResponseObj);
+
+                                commonApi.msg(notifyName, 'Success', `Translated ${transArr.length} lines. Body bytes: ${body.length}`);
+
+                                if (isQX) {
+                                    $done({ bodyBytes: body.buffer.slice(body.byteOffset, body.byteLength + body.byteOffset) });
+                                } else {
+                                    $done({ body });
+                                }
+                            } else {
+                                commonApi.msg(notifyName, 'Parse', `Invalid GT struct: ${data.substring(0, 20)}`);
+                                $done({});
+                            }
+                        } catch (e) {
+                            commonApi.msg(notifyName, 'Parse', `JSON Error: ${e.message}`);
+                            $done({});
+                        }
+                    }
+                });
+            } catch (e) {
+                commonApi.msg(notifyName, 'Lyrics Debug', `Script crashed: ${e.message}`);
+                $done({});
             }
-        });
-    } else {
-        console.log('歌词为中文,无需翻译');
-        $done({});
+        } else {
+            commonApi.msg(notifyName, 'Lyrics Debug', 'Language is already z1 (SKIP)');
+            $done({});
+        }
     }
 }
 // https://github.com/chavyleung/scripts/blob/master/Env.min.js
