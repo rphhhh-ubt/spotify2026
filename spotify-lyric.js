@@ -78,100 +78,95 @@ if (resStatus !== 200) {
         if (!colorLyricsResponseObj || !colorLyricsResponseObj.lyrics) {
             commonApi.msg(notifyName, 'Lyrics Debug', 'No lyrics object found');
             $done({});
-            return;
-        }
-
-        if (!colorLyricsResponseObj.lyrics.lines || colorLyricsResponseObj.lyrics.lines.length === 0) {
+        } else if (!colorLyricsResponseObj.lyrics.lines || colorLyricsResponseObj.lyrics.lines.length === 0) {
             commonApi.msg(notifyName, 'Lyrics Debug', 'No lines found in lyrics');
             $done({});
-            return;
-        }
+        } else {
+            const originLanguage = colorLyricsResponseObj.lyrics.language;
+            if (!originLanguage) {
+                commonApi.msg(notifyName, 'Lyrics Debug', 'No origin language, skipping');
+                $done({});
+            } else if ('z1' !== originLanguage) {
+                try {
+                    const query = colorLyricsResponseObj.lyrics.lines
+                        .map(x => x.words)
+                        .filter(words => words && words !== '♪')
+                        .filter((v, i, a) => a.indexOf(v) === i)
+                        .join('\n');
 
-        const originLanguage = colorLyricsResponseObj.lyrics.language;
-        if (!originLanguage) {
-            commonApi.msg(notifyName, 'Lyrics Debug', 'No origin language, skipping');
-            $done({});
-        } else if ('z1' !== originLanguage) {
-            try {
-                const query = colorLyricsResponseObj.lyrics.lines
-                    .map(x => x.words)
-                    .filter(words => words && words !== '♪')
-                    .filter((v, i, a) => a.indexOf(v) === i)
-                    .join('\n');
-
-                if (!query) {
-                    commonApi.msg(notifyName, 'Lyrics Debug', 'Query is empty after filtering');
-                    $done({});
-                    return;
-                }
-
-                const requestUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ru&dt=t`;
-
-                commonApi.post({
-                    url: requestUrl,
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-                        'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
-                    },
-                    body: `q=${encodeURIComponent(query)}`
-                }, (error, response, data) => {
-                    if (error) {
-                        commonApi.msg(notifyName, 'Google API', `Error: ${error}`);
-                        $done({});
-                    } else if (response.status !== 200) {
-                        commonApi.msg(notifyName, 'Google API', `Status: ${response.status}`);
+                    if (!query) {
+                        commonApi.msg(notifyName, 'Lyrics Debug', 'Query is empty after filtering');
                         $done({});
                     } else {
-                        try {
-                            const gtResult = JSON.parse(data);
+                        const requestUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ru&dt=t`;
 
-                            if (gtResult && gtResult[0]) {
-                                let translatedLinesArray = gtResult[0].map(item => item[0]);
-                                let fullTranslatedText = translatedLinesArray.join('');
-                                let transMapValues = fullTranslatedText.split('\n').map(l => l.trim());
-
-                                let originalLines = query.split('\n');
-                                const transArr = [];
-                                for (let i = 0; i < originalLines.length; i++) {
-                                    if (originalLines[i] && transMapValues[i] && originalLines[i] !== transMapValues[i]) {
-                                        transArr.push([originalLines[i], transMapValues[i]]);
-                                    }
-                                }
-
-                                const transMap = new Map(transArr);
-
-                                colorLyricsResponseObj.lyrics.alternatives = [{
-                                    "language": "z1",
-                                    "lines": colorLyricsResponseObj.lyrics.lines.map(line => line.words)
-                                        .map(word => transMap.get(word) || word || '')
-                                }];
-
-                                const body = ColorLyricsResponse.toBinary(colorLyricsResponseObj);
-
-                                commonApi.msg(notifyName, 'Success', `Translated ${transArr.length} lines. Body bytes: ${body.length}`);
-
-                                if (isQX) {
-                                    $done({ bodyBytes: body.buffer.slice(body.byteOffset, body.byteLength + body.byteOffset) });
-                                } else {
-                                    $done({ body });
-                                }
-                            } else {
-                                commonApi.msg(notifyName, 'Parse', `Invalid GT struct: ${data.substring(0, 20)}`);
+                        commonApi.post({
+                            url: requestUrl,
+                            headers: {
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+                            },
+                            body: `q=${encodeURIComponent(query)}`
+                        }, (error, response, data) => {
+                            if (error) {
+                                commonApi.msg(notifyName, 'Google API', `Error: ${error}`);
                                 $done({});
+                            } else if (response.status !== 200) {
+                                commonApi.msg(notifyName, 'Google API', `Status: ${response.status}`);
+                                $done({});
+                            } else {
+                                try {
+                                    const gtResult = JSON.parse(data);
+
+                                    if (gtResult && gtResult[0]) {
+                                        let translatedLinesArray = gtResult[0].map(item => item[0]);
+                                        let fullTranslatedText = translatedLinesArray.join('');
+                                        let transMapValues = fullTranslatedText.split('\n').map(l => l.trim());
+
+                                        let originalLines = query.split('\n');
+                                        const transArr = [];
+                                        for (let i = 0; i < originalLines.length; i++) {
+                                            if (originalLines[i] && transMapValues[i] && originalLines[i] !== transMapValues[i]) {
+                                                transArr.push([originalLines[i], transMapValues[i]]);
+                                            }
+                                        }
+
+                                        const transMap = new Map(transArr);
+
+                                        colorLyricsResponseObj.lyrics.alternatives = [{
+                                            "language": "z1",
+                                            "lines": colorLyricsResponseObj.lyrics.lines.map(line => line.words)
+                                                .map(word => transMap.get(word) || word || '')
+                                        }];
+
+                                        const body = ColorLyricsResponse.toBinary(colorLyricsResponseObj);
+
+                                        commonApi.msg(notifyName, 'Success', `Translated ${transArr.length} lines. Body bytes: ${body.length}`);
+
+                                        if (isQX) {
+                                            $done({ bodyBytes: body.buffer.slice(body.byteOffset, body.byteLength + body.byteOffset) });
+                                        } else {
+                                            $done({ body });
+                                        }
+                                    } else {
+                                        commonApi.msg(notifyName, 'Parse', `Invalid GT struct: ${data.substring(0, 20)}`);
+                                        $done({});
+                                    }
+                                } catch (e) {
+                                    commonApi.msg(notifyName, 'Parse', `JSON Error: ${e.message}`);
+                                    $done({});
+                                }
                             }
-                        } catch (e) {
-                            commonApi.msg(notifyName, 'Parse', `JSON Error: ${e.message}`);
-                            $done({});
-                        }
+                        });
                     }
-                });
-            } catch (e) {
-                commonApi.msg(notifyName, 'Lyrics Debug', `Script crashed: ${e.message}`);
+                } catch (e) {
+                    commonApi.msg(notifyName, 'Lyrics Debug', `Script crashed: ${e.message}`);
+                    $done({});
+                }
+            } else {
+                commonApi.msg(notifyName, 'Lyrics Debug', 'Language is already z1 (SKIP)');
                 $done({});
             }
-        } else {
-            commonApi.msg(notifyName, 'Lyrics Debug', 'Language is already z1 (SKIP)');
-            $done({});
         }
     }
 }
