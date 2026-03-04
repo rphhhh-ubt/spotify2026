@@ -78,14 +78,16 @@ if (resStatus !== 200) {
             .filter(words => words && words !== '♪')
             .filter((v, i, a) => a.indexOf(v) === i)
             .join('\n');
-        // Подготовка запроса к Google Translate (бесплатный неофициальный API)
-        const requestUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ru&dt=t&q=${encodeURIComponent(query)}`;
+        // Используем POST запрос для обхода лимита длины URL (414 URI Too Long)
+        const requestUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ru&dt=t`;
 
-        commonApi.get({
+        commonApi.post({
             url: requestUrl,
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8'
+            },
+            body: `q=${encodeURIComponent(query)}`
         }, (error, response, data) => {
             if (error) {
                 commonApi.msg(notifyName, 'Google Translate', `error错误${error}`);
