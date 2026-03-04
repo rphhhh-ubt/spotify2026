@@ -50,10 +50,19 @@ if (resStatus !== 200) {
 }
 
 function processMapObj(accountAttributesMapObj) {
-    accountAttributesMapObj['player-license'] = { stringValue: 'premium' };
+    accountAttributesMapObj['ads'] = { boolValue: false };
+    accountAttributesMapObj['catalogue'] = { stringValue: 'premium' };
+    accountAttributesMapObj['high-bitrate'] = { boolValue: true };
+    accountAttributesMapObj['libspotify'] = { stringValue: '1' };
     accountAttributesMapObj['mobile'] = { boolValue: true };
+    accountAttributesMapObj['mobile-login'] = { boolValue: true };
+    accountAttributesMapObj['on-demand'] = { boolValue: true };
+    accountAttributesMapObj['player-license'] = { stringValue: 'premium' };
+    accountAttributesMapObj['radio'] = { boolValue: true };
+    accountAttributesMapObj['shuffle'] = { boolValue: false };
     accountAttributesMapObj['streaming-rules'] = { stringValue: '' };
     accountAttributesMapObj['financial-product'] = { stringValue: 'pr:premium,tc:0' };
     accountAttributesMapObj['license-acceptance-grace-days'] = { longValue: 30 };
-    accountAttributesMapObj['mobile-login'] = { boolValue: true };
+    accountAttributesMapObj['mobile-update'] = { boolValue: false };
+    accountAttributesMapObj['update'] = { boolValue: false };
 }

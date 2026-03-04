@@ -1,16 +1,45 @@
 #!name=Spotify
-#!desc=本模块可能不再更新，请访问仓库重新选择
-#!arguments=歌词翻译:false, 翻译账户:申请并填入百度翻译AppID, 翻译密钥:申请并填入百度翻译密钥
-#!arguments-desc=歌词翻译功能说明\n\n· 需申请百度翻译API的ID和密钥并填入，推荐高级版\n\n· 申请时建议使用桌面设备，移动设备可能访问失败\n\n· 成功启用后，歌词界面左下角即可看到翻译按钮\n\n - 注册百度翻译个人开发者，高级版需要实名认证: \n\n    http://api.fanyi.baidu.com/register\n\n - 开通(通用文本翻译)API服务: \n\n    https://fanyi-api.baidu.com/choose\n\n - 成功后即可看到自己的AppID和密钥(不要泄露): \n\n    http://api.fanyi.baidu.com/manage/developer
-# 代码来源：https://github.com/app2smile
-# 仓库地址：https://github.com/LOWERTOP/Shadowrocket-First
+#!desc=https://github.com/rphhhh-ubt/spotify2026
+#!arguments=ПереводТекстов:false, АккаунтBaidu:Введите_Baidu_AppID, КлючBaidu:Введите_Ключ
+#!arguments-desc=ОПИСАНИЕ ПЕРЕВОДА ТЕКСТОВ ПЕСЕН\n\n· Необходимо зарегистрировать Baidu Translate API и ввести ID и ключ\n\n· Регистрироваться лучше с ПК, с телефона может быть ошибка\n\n· После включения кнопка перевода появится в интерфейсе текстов\n\n - Регистрация аккаунта Baidu (Advanced версия требует паспорта): \n\n    http://api.fanyi.baidu.com/register\n\n - Включение сервиса перевода текстов: \n\n    https://fanyi-api.baidu.com/choose\n\n - Получить свои AppID и Ключ (не передавайте 3-им лицам): \n\n    http://api.fanyi.baidu.com/manage/developer
+# Источник кода: https://github.com/app2smile
+# Адрес репозитория: https://github.com/LOWERTOP/Shadowrocket-First
 
 [Rule]
 # Spotify QUIC BLOCK
 AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT-NO-DROP
 
+# Block Spotify Ads & Tracking
+DOMAIN-SUFFIX,adclick.g.doubleclick.net,REJECT
+DOMAIN-SUFFIX,adeventtracker.spotify.com,REJECT
+DOMAIN-SUFFIX,ads-fa.spotify.com,REJECT
+DOMAIN-SUFFIX,analytics.spotify.com,REJECT
+DOMAIN-SUFFIX,b.scorecardresearch.com,REJECT
+DOMAIN-SUFFIX,bounceexchange.com,REJECT
+DOMAIN-SUFFIX,bs.serving-sys.com,REJECT
+DOMAIN-SUFFIX,content.bitsontherun.com,REJECT
+DOMAIN-SUFFIX,core.insightexpressai.com,REJECT
+DOMAIN-SUFFIX,crashdump.spotify.com,REJECT
+DOMAIN-SUFFIX,d2gi7ultltnc2u.cloudfront.net,REJECT
+DOMAIN-SUFFIX,d3rt1990lpmkn.cloudfront.net,REJECT
+DOMAIN-SUFFIX,doubleclick.net,REJECT
+DOMAIN-SUFFIX,ds.serving-sys.com,REJECT
+DOMAIN-SUFFIX,googleadservices.com,REJECT
+DOMAIN-SUFFIX,gtssl2-ocsp.geotrust.com,REJECT
+DOMAIN-SUFFIX,js.moatads.com,REJECT
+DOMAIN-SUFFIX,log.spotify.com,REJECT
+DOMAIN-SUFFIX,media-match.com,REJECT
+DOMAIN-SUFFIX,omaze.com,REJECT
+DOMAIN-SUFFIX,pagead2.googlesyndication.com,REJECT
+DOMAIN-SUFFIX,partner.googleadservices.com,REJECT
+DOMAIN-SUFFIX,redirector.gvt1.com,REJECT
+DOMAIN-SUFFIX,s0.2mdn.net,REJECT
+DOMAIN-SUFFIX,tpc.googlesyndication.com,REJECT
+DOMAIN-SUFFIX,v.jwpcdn.com,REJECT
+DOMAIN-SUFFIX,video-ad-stats.googlesyndication.com,REJECT
+
 [Header Rewrite]
-# if-none-match返回304状态码
+# if-none-match возвращает статус 304
 http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/user-customization-service\/v1\/customize$ header-del if-none-match
 
 [Script]
@@ -18,7 +47,7 @@ spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|
 spotify-json2 = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/device-capabilities\/v1\/capabilities,requires-body=1,script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json2.js
 spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/rphhhh-ubt/spotify2026/main/spotify-proto.js
 
-spotify歌词翻译 = type=http-response,pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-lyric.js,enable={{{歌词翻译}}},argument=appid={{{翻译账户}}}&securityKey={{{翻译密钥}}}
+ПереводТекстов = type=http-response,pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/rphhhh-ubt/spotify2026/main/spotify-lyric.js,enable={{{ПереводТекстов}}},argument=appid={{{АккаунтBaidu}}}&securityKey={{{КлючBaidu}}}
 
 [MITM]
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
