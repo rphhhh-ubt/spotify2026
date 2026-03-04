@@ -45,7 +45,7 @@ spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|
 spotify-json2 = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/device-capabilities\/v1\/capabilities,requires-body=1,script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json2.js
 spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/rphhhh-ubt/spotify2026/main/spotify-proto.js
 
-spotify-lyric = type=http-response,pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/rphhhh-ubt/spotify2026/main/spotify-lyric.js,argument=enable=true
+spotify-lyric = type=http-response,pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/rphhhh-ubt/spotify2026/main/spotify-lyric.js
 
 [MITM]
 hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
