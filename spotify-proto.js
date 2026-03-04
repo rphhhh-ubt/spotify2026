@@ -50,18 +50,49 @@ if (resStatus !== 200) {
 }
 
 function processMapObj(accountAttributesMapObj) {
-    accountAttributesMapObj['ads'] = { boolValue: false };
-    accountAttributesMapObj['catalogue'] = { stringValue: 'premium' };
-    accountAttributesMapObj['high-bitrate'] = { boolValue: true };
-    accountAttributesMapObj['libspotify'] = { stringValue: '1' };
-    accountAttributesMapObj['mobile'] = { boolValue: true };
-    accountAttributesMapObj['mobile-login'] = { boolValue: true };
-    accountAttributesMapObj['on-demand'] = { boolValue: true };
-    accountAttributesMapObj['player-license'] = { stringValue: 'premium' };
-    accountAttributesMapObj['radio'] = { boolValue: true };
+    accountAttributesMapObj['smart-shuffle'] = { stringValue: 'AVAILABLE' };
+    accountAttributesMapObj['is-euterpe'] = { boolValue: true };
+    accountAttributesMapObj['has-audiobooks-subscription'] = { boolValue: true };
+    accountAttributesMapObj['type'] = { stringValue: 'premium' };
+    accountAttributesMapObj['payments-initial-campaign'] = { stringValue: 'prepaid' };
+
+    const expireDate = new Date();
+    expireDate.setMonth(expireDate.getMonth() + 1);
+    const endDateStr = expireDate.toISOString().split('.')[0] + "Z";
+    accountAttributesMapObj['subscription-enddate'] = { stringValue: endDateStr };
+    accountAttributesMapObj['social-session-free-tier'] = { boolValue: false };
+    accountAttributesMapObj['can_use_superbird'] = { boolValue: true };
+    accountAttributesMapObj['jam-social-session'] = { stringValue: 'EXPANDED' };
+    accountAttributesMapObj['offline'] = { boolValue: true };
+    accountAttributesMapObj['audio-quality'] = { stringValue: '1' };
+    accountAttributesMapObj['shuffle-algorithm'] = { stringValue: 'RANDOM' };
+    accountAttributesMapObj['is-thalia'] = { boolValue: true };
     accountAttributesMapObj['shuffle'] = { boolValue: false };
-    accountAttributesMapObj['streaming-rules'] = { stringValue: '' };
+    accountAttributesMapObj['is-pigeon'] = { boolValue: true };
+    accountAttributesMapObj['nft-disabled'] = { stringValue: '1' };
+    accountAttributesMapObj['libspotify'] = { boolValue: true };
+    accountAttributesMapObj['high-bitrate'] = { boolValue: true };
+    accountAttributesMapObj['unrestricted'] = { boolValue: true };
+    accountAttributesMapObj['catalogue'] = { stringValue: 'premium' };
+    accountAttributesMapObj['your-library-tags'] = { boolValue: true };
+    accountAttributesMapObj['ads'] = { boolValue: false };
+    accountAttributesMapObj['on-demand'] = { boolValue: true };
+    accountAttributesMapObj['name'] = { stringValue: 'Spotify Premium' };
+    accountAttributesMapObj['loudness-levels'] = { stringValue: '1:-5.0,0.0,3.0:-2.0' };
+    accountAttributesMapObj['product-expiry'] = { stringValue: endDateStr };
+    accountAttributesMapObj['social-session'] = { boolValue: true };
+    accountAttributesMapObj['pick-and-shuffle'] = { boolValue: false };
+    accountAttributesMapObj['offline-backup'] = { stringValue: 'UNRESTRICTED' };
+    accountAttributesMapObj['lyrics-offline'] = { boolValue: true };
     accountAttributesMapObj['financial-product'] = { stringValue: 'pr:premium,tc:0' };
+    accountAttributesMapObj['streaming-rules'] = { stringValue: '' };
+    accountAttributesMapObj['mixing-tools'] = { stringValue: 'EDIT' };
+    accountAttributesMapObj['mobile'] = { boolValue: true };
+    accountAttributesMapObj['player-license'] = { stringValue: 'premium' };
+    accountAttributesMapObj['com.spotify.madprops.use.ucs.product.state'] = { boolValue: true };
+    accountAttributesMapObj['com.spotify.madprops.delivered.by.ucs'] = { boolValue: true };
+
+    // Custom anti-update and prevent 14-days logout flags
     accountAttributesMapObj['license-acceptance-grace-days'] = { longValue: 30 };
     accountAttributesMapObj['mobile-update'] = { boolValue: false };
     accountAttributesMapObj['update'] = { boolValue: false };
